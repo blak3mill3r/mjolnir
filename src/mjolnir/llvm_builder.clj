@@ -140,7 +140,7 @@
                        (count arg-types)
                        false)))
 
- 
+
 (defn new-module []
   (llvm/ModuleCreateWithName "Mjolnir Module"))
 
@@ -519,6 +519,7 @@
         is-void? (-> inst
                      :inst.call/fn
                      :node/return-type
+                     :type.fn/return
                      :node/type
                      (= :type/void))]
     (assert (and (every? identity args) fnc))
@@ -531,9 +532,14 @@
                  " called with "
                  (count args)))
     (->>
-     (llvm/BuildCall builder fnc (llvm/map-parr identity args) (count args) (when-not is-void?
-                                                                              (str (:db/id inst))))
-     (assoc defs inst))))
+      (llvm/BuildCall builder
+                      fnc
+                      (llvm/map-parr identity args)
+                      (count args)
+                      (if-not is-void?
+                        (str (:db/id inst))
+                        ""))
+      (assoc defs inst))))
 
 (def atomic-mappings
   {:cas  llvm/LLVMAtomicRMWBinOpXchg
@@ -695,7 +701,7 @@
 
 #_(defn cast-struct [ptr tp]
   {:inst.type/cast
-   :node/return-type 
+   :node/return-type
    :inst.cast/type :inst.cast.type/bitcast
    :inst.arg/arg0 ptr})
 
@@ -792,4 +798,3 @@
 
 (defn dump [module]
   (llvm/DumpModule module))
-
