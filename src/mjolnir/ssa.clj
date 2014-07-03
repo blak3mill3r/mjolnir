@@ -18,7 +18,7 @@
   [ADD_204 :ADD MUL_202 MUL_203]
   [FN_205 :GET-GLOBAL "llvm.sqrt"]
   [RET_205 :CALL FN_205 MUL_204]
-  
+
   )
 
 (def kw->attrs
@@ -61,26 +61,27 @@
    :phi.value/value #{:one :ref}
 
    :inst/return-value #{:one :ref}
-   
+
    :block/fn #{:one :ref}
    :block/name #{:one :string}
    :block/terminator-inst #{:one :ref}
-   
+
    :const/int-value #{:one :int}
    :const/float-value #{:one :float}
+   :const/void-value #{:one :int}
    :const/type #{:one :ref}
-   
+
    :argument/name #{:one :string}
    :argument/idx #{:one :int}
 
    :type.fn/return #{:one :ref}
    :type.fn/arguments #{:one :ref}
 
-   :list/head #{:one :ref} 
+   :list/head #{:one :ref}
 
    :node/type #{:one :keyword}
    :node/return-type #{:one :ref}
-   
+
    :type/width #{:one :int}
 
    :type/element-type #{:one :ref}
@@ -106,7 +107,7 @@
 
    :inst.set/member #{:one :keyword}
    :inst.get/member #{:one :keyword}
-   
+
    :inst.gbl/name #{:one :string}
    :inst.call/fn #{:one :ref}
 
@@ -121,7 +122,7 @@
    :inst.new/type #{:one :ref}
    :inst.new/count #{:one :ref}
    :inst.new/size #{:one :ref}
-   
+
    :inst.atomic/op #{:one :keyword}
 
    ;; args
@@ -234,7 +235,7 @@
       :new-ents nil
       :singletons nil)))
 
-(defn plan-id 
+(defn plan-id
   [plan val]
   (if-let [v (get-in plan [:tempids val])]
     v

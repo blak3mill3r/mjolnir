@@ -89,6 +89,9 @@
 (defn integer-type? [tp]
   (instance? IntegerType tp))
 
+(defn void-type? [tp]
+  (instance? VoidType tp))
+
 (defrecord FloatType [width]
   Validatable
   (validate [this]
@@ -306,6 +309,3 @@
 (def Float64* (->PointerType Float64))
 (def Float64x4 (->VectorType Float64 4))
 (def Float64x4* (->PointerType Float64x4))
-
-
-

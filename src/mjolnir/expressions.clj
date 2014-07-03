@@ -135,7 +135,7 @@
                  (llvm/GetNamedFunction *module* (full-name name))
                  (llvm/GetNamedGlobal *module* (full-name name)))]
       (assert val (str "Global not found " (full-name name)))
-      
+
       val)))
 
 (defrecord Gbl [name]
@@ -228,7 +228,11 @@
           (gen-plan
            [block-id (add-entry-block fn-id)
             body-id (write-ssa body)
-            ret-id (terminate-block :inst.type/return-val body-id)]
+            ret-id (if (void-type? (:ret-type type))
+                       (terminate-block :inst.type/return-void
+                                        body-id)
+                       (terminate-block :inst.type/return-val
+                                        body-id))]
            ret-id)
           (mark-extern-fn fn-id))]
      [fn-id])))

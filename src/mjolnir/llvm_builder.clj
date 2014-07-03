@@ -498,6 +498,10 @@
                               ret
                               (str "return_" (:db/id inst)))))
 
+(defmethod build-instruction :inst.type/return-void
+  [d module builder fn inst defs]
+  (llvm/BuildRetVoid builder))
+
 (defmethod build-instruction :inst.type/gbl
   [d module builder fn itm defs]
   (assert defs)
