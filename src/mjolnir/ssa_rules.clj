@@ -195,7 +195,7 @@
   [(identity "Binop args must match return type") ?msg])
 
 
-(defn func-arg-count-dont-match? [db tp-id call-id]
+(defn func-arg-count-valid? [db tp-id call-id]
   (let [call-ent    (d/entity db call-id)
         tp-ent      (d/entity db tp-id)
         variadic?   (:type.fn/variadic? tp-ent)
@@ -204,8 +204,8 @@
     ;; arg-count is decremented because
     ;; inst.call/fn is included in the argument list
     (if variadic?
-      (< arg-count param-count)
-      (not= arg-count param-count))))
+      (>= arg-count param-count)
+      (= arg-count param-count))))
 
 (defrule validate [?id ?msg]
   "Calls must match argument counts"
@@ -213,7 +213,7 @@
   [?id :inst.call/fn ?gbl]
   [?gbl :inst.gbl/name ?name]
   [?gbl :node/return-type ?tp]
-  [(mjolnir.ssa-rules/func-arg-count-dont-match? $ ?tp ?id)]
+  [((complement mjolnir.ssa-rules/func-arg-count-valid?) $ ?tp ?id)]
   [(str "Call signature doesn't match function, calling " ?name) ?msg])
 
 
