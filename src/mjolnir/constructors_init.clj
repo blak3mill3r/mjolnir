@@ -42,9 +42,9 @@
   (exp/->If test then else))
 
 
-(defn c-fn-t [args ret]
-  #_{:post [(tp/valid? %)]}
-  (tp/->FunctionType args ret))
+(defn c-fn-t
+  ([args ret] (c-fn-t args ret false))
+  ([args ret variadic?] (tp/->FunctionType args ret variadic?)))
 
 (defmacro c-fn [name tp args linkage & body]
   {:pre [name tp args]}
@@ -198,7 +198,7 @@
 (defmacro c-let [bindings & body]
   (reduce (fn [a [local binding]]
             (let [s (name (gensym (str (name local) "_")))]
-              `(exp/->Let ~(name local) ~binding 
+              `(exp/->Let ~(name local) ~binding
                          (let [~local (c-local ~local)]
                                ~a))))
            `(exp/->Do ~(vec body))
@@ -333,10 +333,10 @@
    `(exp/->Call
      (exp/->Gbl ~(first x))
      ~(mapv convert-form-1 (next x)))
-   
+
    (seq? x)
    (convert-form x)
-   
+
    (vector? x)
    (into [] (convert-form x))
 
@@ -345,7 +345,7 @@
 
    (set? x)
    (into #{} (convert-form x))
-   
+
    (and (symbol? x)
         (constructor? x))
    (let [s
@@ -353,8 +353,8 @@
                                                          "div"
                                                          (symbol x))))]
      s)
-   
-   
+
+
    :else
    x))
 

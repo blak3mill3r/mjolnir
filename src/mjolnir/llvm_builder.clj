@@ -133,12 +133,13 @@
 (defmethod build-type :type/fn
   [{return-type :type.fn/return
     arg-types :type.fn/arguments
+    variadic? :type.fn/variadic?
     :as this}]
   (let [arg-types (to-seq arg-types)]
     (llvm/FunctionType (build-type return-type)
                        (llvm/map-parr build-type arg-types)
                        (count arg-types)
-                       false)))
+                       variadic?)))
 
 
 (defn new-module []
@@ -520,19 +521,25 @@
   [d module builder fn inst defs]
   (let [args (map defs (args-seq inst))
         fnc (defs (:inst.call/fn inst))
-        is-void? (-> inst
+        void? (-> inst
                      :inst.call/fn
                      :node/return-type
                      :type.fn/return
                      :node/type
-                     (= :type/void))]
+                     (= :type/void))
+        variadic? (-> inst
+                         :inst.call/fn
+                         :node/return-type
+                         :type.fn/variadic?)
+        param-count (llvm/CountParams fnc)]
     (assert (and (every? identity args) fnc))
-    (assert (= (llvm/CountParams fnc)
-               (count args))
+    (assert (if variadic?
+                (<= param-count (count args))
+                (= param-count (count args)))
             (str "Arg Count mismatch: "
                  (-> inst :inst.call/fn :inst.gbl/name)
                  " "
-                 (llvm/CountParams fnc)
+                 param-count
                  " called with "
                  (count args)))
     (->>
@@ -540,7 +547,7 @@
                       fnc
                       (llvm/map-parr identity args)
                       (count args)
-                      (if-not is-void?
+                      (if-not void?
                         (str (:db/id inst))
                         ""))
       (assoc defs inst))))

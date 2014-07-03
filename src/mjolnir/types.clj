@@ -179,7 +179,7 @@
                          this)]
      this-id)))
 
-(defrecord FunctionType [arg-types ret-type]
+(defrecord FunctionType [arg-types ret-type variadic?]
   Validatable
   (validate [this]
     (every? assure-type arg-types)
@@ -189,7 +189,7 @@
     (llvm/FunctionType (llvm-type ret-type)
                        (llvm/map-parr llvm-type arg-types)
                        (count arg-types)
-                       false))
+                       variadic?))
   IToPlan
   (add-to-plan [this]
     (gen-plan
@@ -197,7 +197,8 @@
       ret (add-to-plan ret-type)
       seq (assert-seq args)
       this-id (singleton (merge {:node/type :type/fn
-                                 :type.fn/return ret}
+                                 :type.fn/return ret
+                                 :type.fn/variadic? variadic?}
                                 (when seq
                                   {:type.fn/arguments seq})))
       _ (add-all (map (fn [x idx]

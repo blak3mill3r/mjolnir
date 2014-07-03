@@ -76,6 +76,7 @@
 
    :type.fn/return #{:one :ref}
    :type.fn/arguments #{:one :ref}
+   :type.fn/variadic? #{:one :boolean}
 
    :list/head #{:one :ref}
 

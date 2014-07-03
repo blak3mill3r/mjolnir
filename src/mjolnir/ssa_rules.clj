@@ -196,11 +196,16 @@
 
 
 (defn func-arg-count-dont-match? [db tp-id call-id]
-  (let [call-ent (d/entity db call-id)
-        tp-ent (d/entity db tp-id)]
-    (not= (count (:fn.arg/_fn tp-ent))
-          ;; decrement this, as we include :inst.call/fn
-          (dec (count (:inst/args call-ent))))))
+  (let [call-ent    (d/entity db call-id)
+        tp-ent      (d/entity db tp-id)
+        variadic?   (:type.fn/variadic? tp-ent)
+        arg-count   (dec (count (:inst/args call-ent)))
+        param-count (count (:fn.arg/_fn tp-ent))]
+    ;; arg-count is decremented because
+    ;; inst.call/fn is included in the argument list
+    (if variadic?
+      (< arg-count param-count)
+      (not= arg-count param-count))))
 
 (defrule validate [?id ?msg]
   "Calls must match argument counts"
