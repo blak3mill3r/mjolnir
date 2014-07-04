@@ -342,6 +342,18 @@
   [?arg1-t :node/type :type/pointer]
   [(identity :inst.cast.type/bitcast) ?op])
 
+
+(defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
+  "Arrays are bitcast to pointers"
+  [?arg0-t :node/type :type/array]
+  [?arg1-t :node/type :type/pointer]
+  [(identity :inst.cast.type/bitcast) ?op])
+
+(defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
+  [?arg0-t :node/type :type/pointer]
+  [?arg1-t :node/type :type/array]
+  [(identity :inst.cast.type/bitcast) ?op])
+
 (defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
   "Functions can be bitcast"
   [?arg0-t :node/type :type/fn]
