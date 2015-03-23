@@ -37,8 +37,8 @@
 (def default-target-fn (atom nil))
 
 (defn default-target []
-  (require 'mjolnir.targets.darwin)
-  (let [init (intern 'mjolnir.targets.darwin 'init-target)]
+  (require 'mjolnir.targets.amd64)
+  (let [init (intern 'mjolnir.targets.amd64 'init-target)]
     (init (fn [d-fn]
               (reset! default-target-fn d-fn)))
     (@default-target-fn)))
