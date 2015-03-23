@@ -433,9 +433,6 @@
    LLVMAtomicRMWBinOpUMax
    LLVMAtomicRMWBinOpUMin])
 
-(defnative Integer LLVMInitializeCppBackendTargetInfo)
-(defnative Integer LLVMInitializeCppBackendTarget)
-(defnative Integer LLVMInitializeCppBackendTargetMC)
 (defnative Integer LLVMInitializeX86AsmPrinter)
 (defnative Integer LLVMInitializeX86AsmParser)
 
@@ -446,10 +443,7 @@
   (InitializeX86Target)
   (InitializeX86TargetMC)
   (InitializeX86AsmPrinter)
-  (InitializeX86AsmParser)
-  (InitializeCppBackendTargetInfo)
-  (InitializeCppBackendTarget)
-  (InitializeCppBackendTargetMC))
+  (InitializeX86AsmParser))
 
 (init-target)
 

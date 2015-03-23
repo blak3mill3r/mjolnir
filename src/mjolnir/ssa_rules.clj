@@ -195,12 +195,17 @@
   [(identity "Binop args must match return type") ?msg])
 
 
-(defn func-arg-count-dont-match? [db tp-id call-id]
-  (let [call-ent (d/entity db call-id)
-        tp-ent (d/entity db tp-id)]
-    (not= (count (:fn.arg/_fn tp-ent))
-          ;; decrement this, as we include :inst.call/fn
-          (dec (count (:inst/args call-ent))))))
+(defn func-arg-count-valid? [db tp-id call-id]
+  (let [call-ent    (d/entity db call-id)
+        tp-ent      (d/entity db tp-id)
+        variadic?   (:type.fn/variadic? tp-ent)
+        arg-count   (dec (count (:inst/args call-ent)))
+        param-count (count (:fn.arg/_fn tp-ent))]
+    ;; arg-count is decremented because
+    ;; inst.call/fn is included in the argument list
+    (if variadic?
+      (>= arg-count param-count)
+      (= arg-count param-count))))
 
 (defrule validate [?id ?msg]
   "Calls must match argument counts"
@@ -208,7 +213,7 @@
   [?id :inst.call/fn ?gbl]
   [?gbl :inst.gbl/name ?name]
   [?gbl :node/return-type ?tp]
-  [(mjolnir.ssa-rules/func-arg-count-dont-match? $ ?tp ?id)]
+  [((complement mjolnir.ssa-rules/func-arg-count-valid?) $ ?tp ?id)]
   [(str "Call signature doesn't match function, calling " ?name) ?msg])
 
 
@@ -271,7 +276,7 @@
 
 ;; Binop rules - These rules define an attribute that helps emitters
 ;; decide if a binop is a Float or Int operation. FMul is different
-;; from IMul, so this code specializes that information. 
+;; from IMul, so this code specializes that information.
 
 (comment
   (defrule infer-binop [?id ?op]
@@ -305,18 +310,18 @@
   "Larger Ints truncate to smaller ints"
   [?arg0-t :node/type :type/int]
   [?arg1-t :node/type :type/int]
-  [?arg0-t :type/length ?arg0-length]
-  [?arg1-t :type/length ?arg1-length]
-  [(> ?arg0-length ?arg1-length)]
+  [?arg0-t :type/width ?arg0-width]
+  [?arg1-t :type/width ?arg1-width]
+  [(> ?arg0-width ?arg1-width)]
   [(identity :inst.cast.type/trunc) ?op])
 
 (defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
-  "Larger Ints truncate to smaller ints"
+  "Smaller ints upcast to larger ints"
   [?arg0-t :node/type :type/int]
   [?arg1-t :node/type :type/int]
-  [?arg0-t :type/length ?arg0-length]
-  [?arg1-t :type/length ?arg1-length]
-  [(< ?arg0-length ?arg1-length)]
+  [?arg0-t :type/width ?arg0-width]
+  [?arg1-t :type/width ?arg1-width]
+  [(< ?arg0-width ?arg1-width)]
   [(identity :inst.cast.type/zext) ?op])
 
 (defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
@@ -335,6 +340,18 @@
   "Pointers are bitcast"
   [?arg0-t :node/type :type/pointer]
   [?arg1-t :node/type :type/pointer]
+  [(identity :inst.cast.type/bitcast) ?op])
+
+
+(defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
+  "Arrays are bitcast to pointers"
+  [?arg0-t :node/type :type/array]
+  [?arg1-t :node/type :type/pointer]
+  [(identity :inst.cast.type/bitcast) ?op])
+
+(defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]
+  [?arg0-t :node/type :type/pointer]
+  [?arg1-t :node/type :type/array]
   [(identity :inst.cast.type/bitcast) ?op])
 
 (defrule cast-subtype [?id ?arg0-t ?arg1-t ?op]

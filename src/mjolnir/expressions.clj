@@ -135,7 +135,7 @@
                  (llvm/GetNamedFunction *module* (full-name name))
                  (llvm/GetNamedGlobal *module* (full-name name)))]
       (assert val (str "Global not found " (full-name name)))
-      
+
       val)))
 
 (defrecord Gbl [name]
@@ -209,7 +209,7 @@
   IToPlan
   (add-to-plan [this]
     (gen-plan
-     [type-id (add-to-plan type) 
+     [type-id (add-to-plan type)
       args (assert-all (map (fn [idx name]
                               (let [a {:argument/name name
                                        :argument/idx idx}]
@@ -228,7 +228,11 @@
           (gen-plan
            [block-id (add-entry-block fn-id)
             body-id (write-ssa body)
-            ret-id (terminate-block :inst.type/return-val body-id)]
+            ret-id (if (void-type? (:ret-type type))
+                       (terminate-block :inst.type/return-void
+                                        body-id)
+                       (terminate-block :inst.type/return-val
+                                        body-id))]
            ret-id)
           (mark-extern-fn fn-id))]
      [fn-id])))
@@ -248,13 +252,13 @@
 
       test-id (write-ssa test)
       test-block (get-block)
-      
+
       pre-then-block (add-block fnc "then")
       _ (set-block pre-then-block)
       then-val (write-ssa then)
       post-then-block (get-block)
       then-terminated? (terminated? post-then-block)
-      
+
       pre-else-block (add-block fnc "else")
       _ (set-block pre-else-block)
       else-val (write-ssa else)
@@ -282,7 +286,7 @@
            [_ (set-block post-else-block)
             _ (terminate-block :inst.type/jmp merge-block)
             _ (add-to-phi phi-val post-else-block else-val)]
-           nil))      
+           nil))
 
       _ (set-block merge-block)]
      phi-val)))
@@ -302,7 +306,7 @@
                                      (range)
                                      lst))
                                this)]
-     call-id)))
+      call-id)))
 
 (defrecord CallPointer [fnc args]
   Expression
@@ -490,7 +494,7 @@
                                     (return-type ptr)))
       (assure-same-type (first (nth (flatten-struct etp) mt))
                         (return-type val))))
-  
+
   Expression
   (return-type [this]
     (return-type ptr))
@@ -550,7 +554,7 @@
                           member)
           _ (assert idx "Idx error, did you validate first?")
           cptr (build (->Cast (->PointerType etp) ptr))
-          gep (llvm/BuildStructGEP *builder* cptr idx (genname "get_"))] 
+          gep (llvm/BuildStructGEP *builder* cptr idx (genname "get_"))]
       (llvm/BuildLoad *builder* gep (genname "load_"))))
   SSAWriter
   (write-ssa [this]
@@ -659,7 +663,7 @@
                (filter #(= (:name %)
                            (name kw)))
                first)
-        
+
         gg (->GetGlobal (name kw)
                         (:type f))]
     (assert f (str "Global not found " kw))
@@ -714,7 +718,7 @@
       (when-not (= (llvm/CreateJITCompiler  engine provider 2 error) 0)
         (assert false (.getString error 0 false)))
       (llvm/DisposeMessage (llvm/value-at error))
-      (assert (llvm/value-at engine))      
+      (assert (llvm/value-at engine))
       engine))
 
 (defn java-to-llvm-arg [x]
@@ -769,7 +773,7 @@
 (defn dump [module]
   (llvm/DumpModule module))
 
-(defn write-object-file [module march] 
+(defn write-object-file [module march]
   (let [file (dump-module-to-temp-file module)
         ofile (temp-file "o_dump" ".o")
         cmds ["/usr/local/bin/llc" "-filetype=obj" "-o" ofile file]
@@ -778,7 +782,7 @@
     (apply shell/sh ["/usr/local/bin/llc" "-filetype=asm" "-o" "foo.s" file])
     (println cmds)
     (assert (= exit 0) err)
-    
+
     ofile))
 
 (defn interpret-opt [op]
@@ -819,4 +823,3 @@
      (apply shell/sh file args))
 
 ;;;;;;;;;; Target Machine ;;;;;;;;;;;;;;
-

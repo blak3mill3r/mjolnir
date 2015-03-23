@@ -89,6 +89,9 @@
 (defn integer-type? [tp]
   (instance? IntegerType tp))
 
+(defn void-type? [tp]
+  (instance? VoidType tp))
+
 (defrecord FloatType [width]
   Validatable
   (validate [this]
@@ -176,7 +179,7 @@
                          this)]
      this-id)))
 
-(defrecord FunctionType [arg-types ret-type]
+(defrecord FunctionType [arg-types ret-type variadic?]
   Validatable
   (validate [this]
     (every? assure-type arg-types)
@@ -186,7 +189,7 @@
     (llvm/FunctionType (llvm-type ret-type)
                        (llvm/map-parr llvm-type arg-types)
                        (count arg-types)
-                       false))
+                       variadic?))
   IToPlan
   (add-to-plan [this]
     (gen-plan
@@ -194,7 +197,8 @@
       ret (add-to-plan ret-type)
       seq (assert-seq args)
       this-id (singleton (merge {:node/type :type/fn
-                                 :type.fn/return ret}
+                                 :type.fn/return ret
+                                 :type.fn/variadic? variadic?}
                                 (when seq
                                   {:type.fn/arguments seq})))
       _ (add-all (map (fn [x idx]
@@ -306,6 +310,3 @@
 (def Float64* (->PointerType Float64))
 (def Float64x4 (->VectorType Float64 4))
 (def Float64x4* (->PointerType Float64x4))
-
-
-

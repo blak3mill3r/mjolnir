@@ -20,7 +20,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [Int64] Int64)
+          ft (->FunctionType [Int64] Int64 false)
           add-one (->Fn "add-one" ft ["a"]
                         (->Binop :+ (->Arg 0) 1))]
       (-> (gen-plan
@@ -28,7 +28,7 @@
            f-id)
           (get-plan conn)
           commit)
-      (dotimes [x 3] (infer-all conn))      
+      (dotimes [x 3] (infer-all conn))
       (build (db conn)))))
 
 
@@ -36,7 +36,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [Int64] Int64)
+          ft (->FunctionType [Int64] Int64 false)
           fib (->Fn "fib" ft ["x"]
                     (->If (->Cmp :<= (->Arg 0) 1)
                           (->Arg 0)
@@ -61,7 +61,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [Int64] Int64)
+          ft (->FunctionType [Int64] Int64 false)
           fnc (->Fn "fib" ft ["x"]
                     (->Let "foo" (->Arg 0)
                            (->Local "foo")))]
@@ -79,7 +79,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [Int64] Int64)
+          ft (->FunctionType [Int64] Int64 false)
           fnc (->Fn "fib" ft ["x"]
                     (->Loop [["x" 10]]
                             (->If (->Cmp :< (->Local "x") 10)
@@ -100,7 +100,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [] VoidT)
+          ft (->FunctionType [] VoidT false)
           atype (->ArrayType Int64 10)
           fnc (->Fn "fib" ft []
                     (->Let "arr" (->Malloc atype)
@@ -122,7 +122,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [] VoidT)
+          ft (->FunctionType [] VoidT false)
           atype (->ArrayType Int64 10)
           fnc (->Fn "fnc1" ft [] 1)
           fnc2 (->Fn "fnc2" ft [] 2)
@@ -142,7 +142,7 @@
   (binding [*int-type* Int64
             *target* (default-target)]
     (let [conn (new-db)
-          ft (->FunctionType [Int64] Int64)
+          ft (->FunctionType [Int64] Int64 false)
           fnc (->Fn "fib" ft ["x"]
                     (c/if (c/= 1 2)
                           (c/loop [x 42]
@@ -333,5 +333,3 @@
                 (build-default-module true)
                 (to-dll))]
     (is true)))
-
-
